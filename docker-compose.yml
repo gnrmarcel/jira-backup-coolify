@@ -1,0 +1,31 @@
+services:
+  jira-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: jira-backup
+    restart: unless-stopped
+
+    environment:
+      # Jira Cloud Einstellungen.
+      - JIRA_BASE_URL=${JIRA_BASE_URL:?}
+      - JIRA_EMAIL=${JIRA_EMAIL:?}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN:?}
+      - JIRA_JQL=${JIRA_JQL:-order by key asc}
+
+      # Speicherorte im Container.
+      - BACKUP_ROOT=/data/backups
+      - ARCHIVE_ROOT=/data/archives
+
+      # Lokale Aufbewahrung im Coolify Volume.
+      - LOCAL_KEEP_DAYS=${LOCAL_KEEP_DAYS:-14}
+
+    volumes:
+      # Dieser Docker Volume speichert Backups dauerhaft.
+      - jira_backup_data:/data
+
+    command: ["sleep", "infinity"]
+
+volumes:
+  jira_backup_data:
