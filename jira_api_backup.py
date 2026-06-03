@@ -46,7 +46,7 @@ def build_auth_header() -> Dict[str, str]:
 
 
 def jira_request(method: str, url: str, **kwargs: Any) -> requests.Response:
-    """Führt einen Jira API Request aus und behandelt Rate Limits."""
+    """Führt einen Jira API Request aus und gibt bei Fehlern die Jira Antwort aus."""
     headers = kwargs.pop("headers", {})
     headers.update(build_auth_header())
 
@@ -72,7 +72,14 @@ def jira_request(method: str, url: str, **kwargs: Any) -> requests.Response:
             time.sleep(sleep_seconds)
             continue
 
-        response.raise_for_status()
+        if response.status_code >= 400:
+            print("Jira API Fehler:", file=sys.stderr)
+            print(f"URL: {url}", file=sys.stderr)
+            print(f"Status: {response.status_code}", file=sys.stderr)
+            print("Antwort:", file=sys.stderr)
+            print(response.text, file=sys.stderr)
+            response.raise_for_status()
+
         return response
 
     raise RuntimeError(f"Request mehrfach fehlgeschlagen: {url}")
